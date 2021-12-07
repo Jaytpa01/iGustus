@@ -10,4 +10,5 @@ type IGustusService interface {
 	Test(TestRequest)
 	Scrape(ScrapeRequest)
 	Post(PostRequest)
+	RandomlyReply(RandomReplyRequest)
 }

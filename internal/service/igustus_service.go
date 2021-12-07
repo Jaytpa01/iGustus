@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"fmt"
+	"math/rand"
 	"os"
 	"strings"
 	"time"
@@ -10,6 +11,7 @@ import (
 	"github.com/Jaytpa01/iGustus/internal/entities"
 	"github.com/Jaytpa01/iGustus/pkg/emote"
 	"github.com/Jaytpa01/iGustus/pkg/logger"
+	"github.com/Jaytpa01/iGustus/pkg/util"
 	"github.com/akamensky/argparse"
 	"github.com/bwmarrin/discordgo"
 	gogpt "github.com/sashabaranov/go-gpt3"
@@ -70,7 +72,7 @@ func (is *igustusService) Post(postReq entities.PostRequest) {
 		responseText += fmt.Sprintf(" - %s", emote.EMOTE_JIZ)
 
 	case os.Getenv("OPENAI_MODEL_IGUSTUS"):
-		responseText += fmt.Sprintf(" - %s", emote.EMOTE_FRIGACHAD)
+		responseText += fmt.Sprintf(" - %s", emote.EMOTE_IGUSTUS)
 
 	default:
 		responseText += " - wise unknown robot"
@@ -194,4 +196,71 @@ func scrape(s *discordgo.Session, channelID, lastMessageID string, userIdsToScra
 	}
 
 	return csv, len(msgs), lastMsgID
+}
+
+func (is *igustusService) RandomlyReply(req entities.RandomReplyRequest) {
+	msgs, err := is.discordSession.ChannelMessages(req.ChannelID, 100, "", "", "")
+	if err != nil {
+		return
+	}
+
+	skipFirstFlag := false
+	msgFound := false
+	var foundMsgTimestamp time.Time
+
+	for _, msg := range msgs {
+		if msg.Author.ID == req.UserIDToReply {
+
+			if !skipFirstFlag {
+				skipFirstFlag = true
+				continue
+			}
+
+			msgFound = true
+			foundMsgTimestamp, err = time.Parse("2006-01-02T15:04:05.999999-07:00", string(msg.Timestamp))
+			if err != nil {
+				return
+			}
+
+			break
+		}
+	}
+
+	// the user might not have sent a message in the last hundred messages, or ever in the channel. In this
+	// case we respond to them 100% of the time
+	if !msgFound {
+		replyToMessage(is.discordSession, req.UserIDToReply, req.ChannelID)
+		return
+	}
+
+	// if the last response was greater than 20 minutes, make the chance to respond 100%
+	if req.Timestamp.Sub(foundMsgTimestamp) > time.Minute*20 {
+		replyToMessage(is.discordSession, req.UserIDToReply, req.ChannelID)
+		return
+	}
+
+	source := rand.NewSource(time.Now().UnixNano())
+	r := rand.New(source)
+	randNum := r.Intn(100)
+
+	// 30% chance to respond to a message
+	if randNum < 30 || randNum == 42 {
+		replyToMessage(is.discordSession, req.UserIDToReply, req.ChannelID)
+		return
+	}
+
+}
+
+func replyToMessage(s *discordgo.Session, userID, channelID string) {
+	resp, err := createCompletionWithFineTunedModel("", os.Getenv("OPENAI_MODEL_IGUSTUS"))
+	if err != nil {
+		logger.Log.Error("error posting...", zap.Error(err))
+		return
+	}
+
+	// if a prompt was provided, make sure the bot actually posts it
+	responseText := fmt.Sprintf("%s %s - %s", util.FormatUserMention(userID), resp.Choices[0].Text, emote.EMOTE_IGUSTUS)
+
+	s.ChannelMessageSend(channelID, responseText)
+
 }

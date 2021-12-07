@@ -1,5 +1,7 @@
 package entities
 
+import "time"
+
 type PostRequest struct {
 	ChannelID   string
 	Args        []string
@@ -15,4 +17,10 @@ type ScrapeRequest struct {
 type TestRequest struct {
 	ChannelID string
 	Args      []string
+}
+
+type RandomReplyRequest struct {
+	ChannelID     string
+	UserIDToReply string
+	Timestamp     time.Time
 }

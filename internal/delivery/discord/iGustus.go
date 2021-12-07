@@ -3,6 +3,7 @@ package discord
 import (
 	"os"
 	"strings"
+	"time"
 
 	"github.com/Jaytpa01/iGustus/internal/entities"
 	"github.com/bwmarrin/discordgo"
@@ -23,6 +24,13 @@ func (d *discordHandler) CommandsHandler(s *discordgo.Session, m *discordgo.Mess
 	cmdPrefix := os.Getenv("COMMAND_PREFIX")
 
 	if !strings.HasPrefix(m.Content, cmdPrefix) {
+		randReplyReq := entities.RandomReplyRequest{
+			ChannelID:     m.ChannelID,
+			UserIDToReply: m.Author.ID,
+			Timestamp:     time.Now(),
+		}
+
+		d.IgustusService.RandomlyReply(randReplyReq)
 		return
 	}
 
