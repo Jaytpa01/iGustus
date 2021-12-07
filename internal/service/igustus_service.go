@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/Jaytpa01/iGustus/internal/entities"
+	"github.com/Jaytpa01/iGustus/pkg/emote"
 	"github.com/Jaytpa01/iGustus/pkg/logger"
 	"github.com/akamensky/argparse"
 	"github.com/bwmarrin/discordgo"
@@ -52,7 +53,7 @@ func (is *igustusService) Post(postReq entities.PostRequest) {
 		prompt = strings.Join(postReq.Args[1:], " ")
 	}
 
-	resp, err := createCompletionWithFineTunedModel(prompt)
+	resp, err := createCompletionWithFineTunedModel(prompt, postReq.OpenAIModel)
 	if err != nil {
 		logger.Log.Error("error posting...", zap.Error(err))
 		return
@@ -64,6 +65,17 @@ func (is *igustusService) Post(postReq entities.PostRequest) {
 		responseText = prompt + responseText
 	}
 
+	switch postReq.OpenAIModel {
+	case os.Getenv("OPENAI_MODEL_JIZ"):
+		responseText += fmt.Sprintf(" - %s", emote.EMOTE_JIZ)
+
+	case os.Getenv("OPENAI_MODEL_IGUSTUS"):
+		responseText += fmt.Sprintf(" - %s", emote.EMOTE_FRIGACHAD)
+
+	default:
+		responseText += " - wise unknown robot"
+	}
+
 	_, err = is.discordSession.ChannelMessageSend(postReq.ChannelID, responseText)
 	if err != nil {
 		logger.Log.Error(fmt.Sprintf("error posting message to channel with ID: %s", postReq.ChannelID))
@@ -72,17 +84,15 @@ func (is *igustusService) Post(postReq entities.PostRequest) {
 
 }
 
-func createCompletionWithFineTunedModel(prompt string) (gogpt.CompletionResponse, error) {
+func createCompletionWithFineTunedModel(prompt, model string) (gogpt.CompletionResponse, error) {
 	c := gogpt.NewClient(os.Getenv("OPENAI_TOKEN"))
 	ctx := context.Background()
-
-	model := os.Getenv("OPENAI_ENGINE")
 
 	req := gogpt.CompletionRequest{
 		Prompt:           prompt,
 		Temperature:      0.7,
 		Model:            &model,
-		MaxTokens:        28,
+		MaxTokens:        32,
 		PresencePenalty:  -0.5,
 		FrequencyPenalty: 0.3,
 	}
