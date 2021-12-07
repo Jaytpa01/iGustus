@@ -30,9 +30,9 @@ func (d *discordHandler) CommandsHandler(s *discordgo.Session, m *discordgo.Mess
 	// trim the prefix off of the command. i.e if the prefix was "g!", then "g!pause" will become "pause"
 	args[0] = args[0][len(cmdPrefix):]
 
-	// m.ChannelID
+	command := strings.ToLower(args[0])
 
-	switch args[0] {
+	switch command {
 	case "test":
 		userIDs := []string{}
 		for _, user := range m.Mentions {
@@ -62,10 +62,19 @@ func (d *discordHandler) CommandsHandler(s *discordgo.Session, m *discordgo.Mess
 
 	case "post":
 		postReq := entities.PostRequest{
-			ChannelID: m.ChannelID,
-			Args:      args,
+			ChannelID:   m.ChannelID,
+			Args:        args,
+			OpenAIModel: os.Getenv("OPENAI_MODEL_IGUSTUS"),
 		}
 		d.IgustusService.Post(postReq)
+
+	case "jiz":
+		jizReq := entities.PostRequest{
+			ChannelID:   m.ChannelID,
+			Args:        args,
+			OpenAIModel: os.Getenv("OPENAI_MODEL_JIZ"),
+		}
+		d.IgustusService.Post(jizReq)
 	}
 
 }
