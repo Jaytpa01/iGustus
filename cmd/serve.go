@@ -41,7 +41,7 @@ func VerifyServeEnvironment() {
 		"BOT_TOKEN",
 		"COMMAND_PREFIX",
 		"OPENAI_TOKEN",
-		"OPENAI_ENGINE",
+		"OPENAI_MODEL_IGUSTUS",
 	})
 
 }
