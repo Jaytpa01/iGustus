@@ -28,6 +28,7 @@ func (d *discordHandler) CommandsHandler(s *discordgo.Session, m *discordgo.Mess
 			ChannelID:     m.ChannelID,
 			UserIDToReply: m.Author.ID,
 			Timestamp:     time.Now(),
+			MsgContent:    m.Content,
 		}
 
 		d.IgustusService.RandomlyReply(randReplyReq)
@@ -83,6 +84,22 @@ func (d *discordHandler) CommandsHandler(s *discordgo.Session, m *discordgo.Mess
 			OpenAIModel: os.Getenv("OPENAI_MODEL_JIZ"),
 		}
 		d.IgustusService.Post(jizReq)
+
+	case "zep":
+		zepReq := entities.PostRequest{
+			ChannelID:   m.ChannelID,
+			Args:        args,
+			OpenAIModel: os.Getenv("OPENAI_MODEL_ZEP"),
+		}
+		d.IgustusService.Post(zepReq)
+
+	case "jizus":
+		jizusReq := entities.PostRequest{
+			ChannelID:   m.ChannelID,
+			Args:        args,
+			OpenAIModel: os.Getenv("OPENAI_MODEL_JIZUS"),
+		}
+		d.IgustusService.Post(jizusReq)
 	}
 
 }

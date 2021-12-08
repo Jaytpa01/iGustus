@@ -23,4 +23,5 @@ type RandomReplyRequest struct {
 	ChannelID     string
 	UserIDToReply string
 	Timestamp     time.Time
+	MsgContent    string
 }

@@ -74,6 +74,12 @@ func (is *igustusService) Post(postReq entities.PostRequest) {
 	case os.Getenv("OPENAI_MODEL_IGUSTUS"):
 		responseText += fmt.Sprintf(" - %s", emote.EMOTE_IGUSTUS)
 
+	case os.Getenv("OPENAI_MODEL_ZEP"):
+		responseText += fmt.Sprintf(" - %s", emote.EMOTE_FRIGACHAD)
+
+	case os.Getenv("OPENAI_MODEL_JIZUS"):
+		responseText += fmt.Sprintf(" - %s", emote.EMOTE_JIZUS)
+
 	default:
 		responseText += " - wise unknown robot"
 	}
@@ -229,13 +235,13 @@ func (is *igustusService) RandomlyReply(req entities.RandomReplyRequest) {
 	// the user might not have sent a message in the last hundred messages, or ever in the channel. In this
 	// case we respond to them 100% of the time
 	if !msgFound {
-		replyToMessage(is.discordSession, req.UserIDToReply, req.ChannelID)
+		replyToMessage(is.discordSession, req.UserIDToReply, req.ChannelID, req.MsgContent)
 		return
 	}
 
 	// if the last response was greater than 20 minutes, make the chance to respond 100%
 	if req.Timestamp.Sub(foundMsgTimestamp) > time.Minute*20 {
-		replyToMessage(is.discordSession, req.UserIDToReply, req.ChannelID)
+		replyToMessage(is.discordSession, req.UserIDToReply, req.ChannelID, req.MsgContent)
 		return
 	}
 
@@ -244,22 +250,22 @@ func (is *igustusService) RandomlyReply(req entities.RandomReplyRequest) {
 	randNum := r.Intn(100)
 
 	// 30% chance to respond to a message
-	if randNum < 30 || randNum == 42 {
-		replyToMessage(is.discordSession, req.UserIDToReply, req.ChannelID)
+	if randNum < 10 || randNum == 42 {
+		replyToMessage(is.discordSession, req.UserIDToReply, req.ChannelID, req.MsgContent)
 		return
 	}
 
 }
 
-func replyToMessage(s *discordgo.Session, userID, channelID string) {
-	resp, err := createCompletionWithFineTunedModel("", os.Getenv("OPENAI_MODEL_IGUSTUS"))
+func replyToMessage(s *discordgo.Session, userID, channelID, prompt string) {
+	resp, err := createCompletionWithFineTunedModel(prompt, os.Getenv("OPENAI_MODEL_IGUSTUS"))
 	if err != nil {
 		logger.Log.Error("error posting...", zap.Error(err))
 		return
 	}
 
 	// if a prompt was provided, make sure the bot actually posts it
-	responseText := fmt.Sprintf("%s %s - %s", util.FormatUserMention(userID), resp.Choices[0].Text, emote.EMOTE_IGUSTUS)
+	responseText := fmt.Sprintf("%s %s%s - %s", util.FormatUserMention(userID), prompt, resp.Choices[0].Text, emote.EMOTE_IGUSTUS)
 
 	s.ChannelMessageSend(channelID, responseText)
 
