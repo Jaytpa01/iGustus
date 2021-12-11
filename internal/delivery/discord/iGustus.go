@@ -74,6 +74,7 @@ func (d *discordHandler) CommandsHandler(s *discordgo.Session, m *discordgo.Mess
 			ChannelID:   m.ChannelID,
 			Args:        args,
 			OpenAIModel: os.Getenv("OPENAI_MODEL_IGUSTUS"),
+			Tokens:      38,
 		}
 		d.IgustusService.Post(postReq)
 
@@ -82,6 +83,7 @@ func (d *discordHandler) CommandsHandler(s *discordgo.Session, m *discordgo.Mess
 			ChannelID:   m.ChannelID,
 			Args:        args,
 			OpenAIModel: os.Getenv("OPENAI_MODEL_JIZ"),
+			Tokens:      76,
 		}
 		d.IgustusService.Post(jizReq)
 
@@ -90,16 +92,37 @@ func (d *discordHandler) CommandsHandler(s *discordgo.Session, m *discordgo.Mess
 			ChannelID:   m.ChannelID,
 			Args:        args,
 			OpenAIModel: os.Getenv("OPENAI_MODEL_ZEP"),
+			Tokens:      90,
 		}
 		d.IgustusService.Post(zepReq)
+
+	case "zep2":
+		zep2Req := entities.PostRequest{
+			ChannelID:   m.ChannelID,
+			Args:        args,
+			OpenAIModel: os.Getenv("OPENAI_MODEL_ZEP2"),
+			APIKey:      os.Getenv("OPENAI_TOKEN_ZEP"),
+			Tokens:      40,
+		}
+		d.IgustusService.Post(zep2Req)
 
 	case "jizus":
 		jizusReq := entities.PostRequest{
 			ChannelID:   m.ChannelID,
 			Args:        args,
 			OpenAIModel: os.Getenv("OPENAI_MODEL_JIZUS"),
+			Tokens:      38,
 		}
 		d.IgustusService.Post(jizusReq)
+
+	case "trump":
+		trumpReq := entities.PostRequest{
+			ChannelID:   m.ChannelID,
+			Args:        args,
+			OpenAIModel: os.Getenv("OPENAI_MODEL_TRUMP"),
+			Tokens:      42,
+		}
+		d.IgustusService.Post(trumpReq)
 	}
 
 }

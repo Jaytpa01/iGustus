@@ -6,6 +6,8 @@ type PostRequest struct {
 	ChannelID   string
 	Args        []string
 	OpenAIModel string
+	APIKey      string
+	Tokens      int
 }
 
 type ScrapeRequest struct {

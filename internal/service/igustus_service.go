@@ -55,7 +55,7 @@ func (is *igustusService) Post(postReq entities.PostRequest) {
 		prompt = strings.Join(postReq.Args[1:], " ")
 	}
 
-	resp, err := createCompletionWithFineTunedModel(prompt, postReq.OpenAIModel)
+	resp, err := createCompletionWithFineTunedModel(prompt, postReq.OpenAIModel, postReq.APIKey, postReq.Tokens)
 	if err != nil {
 		logger.Log.Error("error posting...", zap.Error(err))
 		return
@@ -92,17 +92,21 @@ func (is *igustusService) Post(postReq entities.PostRequest) {
 
 }
 
-func createCompletionWithFineTunedModel(prompt, model string) (gogpt.CompletionResponse, error) {
-	c := gogpt.NewClient(os.Getenv("OPENAI_TOKEN"))
+func createCompletionWithFineTunedModel(prompt, model, openAiAPIKey string, tokens int) (gogpt.CompletionResponse, error) {
+	if openAiAPIKey == "" {
+		openAiAPIKey = os.Getenv("OPENAI_TOKEN")
+	}
+
+	c := gogpt.NewClient(openAiAPIKey)
 	ctx := context.Background()
 
 	req := gogpt.CompletionRequest{
 		Prompt:           prompt,
-		Temperature:      0.7,
+		Temperature:      0.9,
 		Model:            &model,
-		MaxTokens:        32,
+		MaxTokens:        tokens,
 		PresencePenalty:  -0.5,
-		FrequencyPenalty: 0.3,
+		FrequencyPenalty: 2,
 	}
 
 	return c.CreateCompletionWithFineTunedModel(ctx, req)
@@ -239,17 +243,19 @@ func (is *igustusService) RandomlyReply(req entities.RandomReplyRequest) {
 		return
 	}
 
-	// if the last response was greater than 20 minutes, make the chance to respond 100%
-	if req.Timestamp.Sub(foundMsgTimestamp) > time.Minute*20 {
-		replyToMessage(is.discordSession, req.UserIDToReply, req.ChannelID, req.MsgContent)
-		return
-	}
-
 	source := rand.NewSource(time.Now().UnixNano())
 	r := rand.New(source)
 	randNum := r.Intn(100)
 
-	// 30% chance to respond to a message
+	// if the last response was greater than 20 minutes, make the chance to respond 100%
+	if req.Timestamp.Sub(foundMsgTimestamp) > time.Minute*20 {
+		if randNum < 75 {
+			replyToMessage(is.discordSession, req.UserIDToReply, req.ChannelID, req.MsgContent)
+		}
+		return
+	}
+
+	// 10% chance to respond to a message
 	if randNum < 10 || randNum == 42 {
 		replyToMessage(is.discordSession, req.UserIDToReply, req.ChannelID, req.MsgContent)
 		return
@@ -258,7 +264,7 @@ func (is *igustusService) RandomlyReply(req entities.RandomReplyRequest) {
 }
 
 func replyToMessage(s *discordgo.Session, userID, channelID, prompt string) {
-	resp, err := createCompletionWithFineTunedModel(prompt, os.Getenv("OPENAI_MODEL_IGUSTUS"))
+	resp, err := createCompletionWithFineTunedModel(prompt, os.Getenv("OPENAI_MODEL_IGUSTUS"), os.Getenv("OPENAI_TOKEN"), 38)
 	if err != nil {
 		logger.Log.Error("error posting...", zap.Error(err))
 		return
