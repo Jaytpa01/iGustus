@@ -5,6 +5,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/Jaytpa01/iGustus/internal/config"
 	"github.com/Jaytpa01/iGustus/internal/entities"
 	"github.com/bwmarrin/discordgo"
 )
@@ -41,6 +42,10 @@ func (d *discordHandler) CommandsHandler(s *discordgo.Session, m *discordgo.Mess
 
 	command := strings.ToLower(args[0])
 
+	if _, ok := config.Config.Models[command]; ok {
+		d.IgustusService.Post(config.Config.Models[command])
+	}
+
 	switch command {
 	case "test":
 		userIDs := []string{}
@@ -74,7 +79,7 @@ func (d *discordHandler) CommandsHandler(s *discordgo.Session, m *discordgo.Mess
 			ChannelID:   m.ChannelID,
 			Args:        args,
 			OpenAIModel: os.Getenv("OPENAI_MODEL_IGUSTUS"),
-			Tokens:      38,
+			MaxTokens:   38,
 		}
 		d.IgustusService.Post(postReq)
 
@@ -83,7 +88,7 @@ func (d *discordHandler) CommandsHandler(s *discordgo.Session, m *discordgo.Mess
 			ChannelID:   m.ChannelID,
 			Args:        args,
 			OpenAIModel: os.Getenv("OPENAI_MODEL_JIZ"),
-			Tokens:      76,
+			MaxTokens:   76,
 		}
 		d.IgustusService.Post(jizReq)
 
@@ -92,7 +97,7 @@ func (d *discordHandler) CommandsHandler(s *discordgo.Session, m *discordgo.Mess
 			ChannelID:   m.ChannelID,
 			Args:        args,
 			OpenAIModel: os.Getenv("OPENAI_MODEL_ZEP"),
-			Tokens:      90,
+			MaxTokens:   90,
 		}
 		d.IgustusService.Post(zepReq)
 
@@ -102,7 +107,7 @@ func (d *discordHandler) CommandsHandler(s *discordgo.Session, m *discordgo.Mess
 			Args:        args,
 			OpenAIModel: os.Getenv("OPENAI_MODEL_ZEP2"),
 			APIKey:      os.Getenv("OPENAI_TOKEN_ZEP"),
-			Tokens:      40,
+			MaxTokens:   40,
 		}
 		d.IgustusService.Post(zep2Req)
 
@@ -111,7 +116,7 @@ func (d *discordHandler) CommandsHandler(s *discordgo.Session, m *discordgo.Mess
 			ChannelID:   m.ChannelID,
 			Args:        args,
 			OpenAIModel: os.Getenv("OPENAI_MODEL_JIZUS"),
-			Tokens:      38,
+			MaxTokens:   38,
 		}
 		d.IgustusService.Post(jizusReq)
 
@@ -120,7 +125,7 @@ func (d *discordHandler) CommandsHandler(s *discordgo.Session, m *discordgo.Mess
 			ChannelID:   m.ChannelID,
 			Args:        args,
 			OpenAIModel: os.Getenv("OPENAI_MODEL_TRUMP"),
-			Tokens:      42,
+			MaxTokens:   42,
 		}
 		d.IgustusService.Post(trumpReq)
 	}

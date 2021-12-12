@@ -7,7 +7,11 @@ type PostRequest struct {
 	Args        []string
 	OpenAIModel string
 	APIKey      string
-	Tokens      int
+	MaxTokens   int
+
+	Temperature      float32
+	PresencePenalty  float32
+	FrequencyPenalty float32
 }
 
 type ScrapeRequest struct {

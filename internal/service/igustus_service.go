@@ -55,7 +55,7 @@ func (is *igustusService) Post(postReq entities.PostRequest) {
 		prompt = strings.Join(postReq.Args[1:], " ")
 	}
 
-	resp, err := createCompletionWithFineTunedModel(prompt, postReq.OpenAIModel, postReq.APIKey, postReq.Tokens)
+	resp, err := createCompletionWithFineTunedModel(prompt, postReq.OpenAIModel, postReq.APIKey, postReq.MaxTokens, postReq.Temperature, postReq.PresencePenalty, postReq.FrequencyPenalty)
 	if err != nil {
 		logger.Log.Error("error posting...", zap.Error(err))
 		return
@@ -92,7 +92,7 @@ func (is *igustusService) Post(postReq entities.PostRequest) {
 
 }
 
-func createCompletionWithFineTunedModel(prompt, model, openAiAPIKey string, tokens int) (gogpt.CompletionResponse, error) {
+func createCompletionWithFineTunedModel(prompt, model, openAiAPIKey string, tokens int, temperature, presencePenalty, frequencyPenalty float32) (gogpt.CompletionResponse, error) {
 	if openAiAPIKey == "" {
 		openAiAPIKey = os.Getenv("OPENAI_TOKEN")
 	}
@@ -102,11 +102,11 @@ func createCompletionWithFineTunedModel(prompt, model, openAiAPIKey string, toke
 
 	req := gogpt.CompletionRequest{
 		Prompt:           prompt,
-		Temperature:      0.9,
+		Temperature:      temperature,
 		Model:            &model,
 		MaxTokens:        tokens,
-		PresencePenalty:  -0.5,
-		FrequencyPenalty: 2,
+		PresencePenalty:  presencePenalty,
+		FrequencyPenalty: frequencyPenalty,
 	}
 
 	return c.CreateCompletionWithFineTunedModel(ctx, req)
@@ -264,7 +264,7 @@ func (is *igustusService) RandomlyReply(req entities.RandomReplyRequest) {
 }
 
 func replyToMessage(s *discordgo.Session, userID, channelID, prompt string) {
-	resp, err := createCompletionWithFineTunedModel(prompt, os.Getenv("OPENAI_MODEL_IGUSTUS"), os.Getenv("OPENAI_TOKEN"), 38)
+	resp, err := createCompletionWithFineTunedModel(prompt, os.Getenv("OPENAI_MODEL_IGUSTUS"), os.Getenv("OPENAI_TOKEN"), 38, 0.9, -0.5, 2)
 	if err != nil {
 		logger.Log.Error("error posting...", zap.Error(err))
 		return
