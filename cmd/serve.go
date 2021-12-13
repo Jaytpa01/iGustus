@@ -48,6 +48,7 @@ func VerifyServeEnvironment() {
 		"COMMAND_PREFIX",
 		"OPENAI_TOKEN",
 		"OPENAI_MODEL_IGUSTUS",
+		"GO_ENV",
 	})
 
 }

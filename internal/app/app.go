@@ -26,7 +26,8 @@ func Run() {
 	bot.Identify.Intents = discordgo.IntentsAllWithoutPrivileged //discordgo.IntentsGuilds | discordgo.IntentsGuildMessages | discordgo.IntentsGuildVoiceStates | discordgo.IntentsGuildMessageReactions | discordgo.
 
 	igustusService := _igustusService.NewIgustusService(bot)
-	_igustusDelivery.NewDiscordHandler(bot, igustusService)
+	mudService := _igustusService.NewMudService()
+	_igustusDelivery.NewDiscordHandler(bot, igustusService, mudService)
 
 	// Open a websocket connection to Discord and begin listening.
 	err = bot.Open()

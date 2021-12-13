@@ -2,6 +2,7 @@ package discord
 
 import (
 	"fmt"
+	"math/rand"
 	"os"
 	"sort"
 	"strings"
@@ -13,15 +14,15 @@ import (
 	"github.com/bwmarrin/discordgo"
 )
 
-func NewDiscordHandler(session *discordgo.Session, service entities.IGustusService) {
-	handler := newDiscordDeliveryHandler(service)
+func NewDiscordHandler(session *discordgo.Session, service entities.IGustusService, mudService entities.MudService) {
+	handler := newDiscordDeliveryHandler(service, mudService)
 
 	session.AddHandler(handler.CommandsHandler)
 }
 
 func (d *discordHandler) CommandsHandler(s *discordgo.Session, m *discordgo.MessageCreate) {
 	// Ignore all messages created by the bot itself
-	if m.Author.ID == s.State.User.ID {
+	if m.Author.ID == s.State.User.ID || m.Author.Bot {
 		return
 	}
 
@@ -129,7 +130,6 @@ func (d *discordHandler) CommandsHandler(s *discordgo.Session, m *discordgo.Mess
 		d.IgustusService.Scrape(req)
 
 	case "bots":
-
 		bots := make([]string, 0, len(config.Config.Models))
 		for k := range config.Config.Models {
 			bots = append(bots, k)
@@ -142,7 +142,51 @@ func (d *discordHandler) CommandsHandler(s *discordgo.Session, m *discordgo.Mess
 			botList += bot + "\n"
 		}
 
-		s.ChannelMessageSend(m.ChannelID, botList)
+		s.ChannelMessageSendEmbed(m.ChannelID, &discordgo.MessageEmbed{
+			Fields: []*discordgo.MessageEmbedField{
+				{
+					Name:  "Bot List",
+					Value: botList,
+				},
+			},
+		})
+
+	case "roll":
+		rollReq := entities.RollRequest{
+			Content: m.Content,
+		}
+		rolls, err := d.MudService.Roll(rollReq)
+		if err != nil {
+			s.ChannelMessageSend(m.ChannelID, fmt.Sprintf("An error occured trying to roll your dice: %s", err.Error()))
+		}
+
+		rollStr := ""
+		for _, roll := range rolls {
+			rollStr += fmt.Sprintf("Total: %d. Rolls: ", roll.Total)
+			for _, r := range roll.Results {
+				rollStr += fmt.Sprintf("[%d/%d] ", r, roll.Faces)
+			}
+			rollStr += "\n"
+		}
+
+		s.ChannelMessageSendEmbed(m.ChannelID, &discordgo.MessageEmbed{
+			Fields: []*discordgo.MessageEmbedField{
+				{
+					Name:  "Rolls",
+					Value: rollStr,
+				},
+			},
+		})
+
+	case "bitch":
+		msg := "<@337696913325293578> "
+		r := rand.New(rand.NewSource(time.Now().UnixNano()))
+		n := r.Intn(180) + 1
+		for i := 0; i < n; i++ {
+			msg += "bitch "
+		}
+
+		s.ChannelMessageSend(m.ChannelID, msg)
 
 	}
 
