@@ -8,6 +8,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/Jaytpa01/iGustus/internal/config"
 	"github.com/Jaytpa01/iGustus/internal/entities"
 	"github.com/Jaytpa01/iGustus/pkg/emote"
 	"github.com/Jaytpa01/iGustus/pkg/logger"
@@ -55,7 +56,7 @@ func (is *igustusService) Post(postReq entities.PostRequest) {
 		prompt = strings.Join(postReq.Args[1:], " ")
 	}
 
-	resp, err := createCompletionWithFineTunedModel(prompt, postReq.OpenAIModel, postReq.APIKey, postReq.Tokens)
+	resp, err := createCompletionWithFineTunedModel(prompt, postReq.OpenAIModel, postReq.APIKey, postReq.MaxTokens, postReq.Temperature, postReq.PresencePenalty, postReq.FrequencyPenalty)
 	if err != nil {
 		logger.Log.Error("error posting...", zap.Error(err))
 		return
@@ -67,22 +68,11 @@ func (is *igustusService) Post(postReq entities.PostRequest) {
 		responseText = prompt + responseText
 	}
 
-	switch postReq.OpenAIModel {
-	case os.Getenv("OPENAI_MODEL_JIZ"):
-		responseText += fmt.Sprintf(" - %s", emote.EMOTE_JIZ)
-
-	case os.Getenv("OPENAI_MODEL_IGUSTUS"):
-		responseText += fmt.Sprintf(" - %s", emote.EMOTE_IGUSTUS)
-
-	case os.Getenv("OPENAI_MODEL_ZEP"):
-		responseText += fmt.Sprintf(" - %s", emote.EMOTE_FRIGACHAD)
-
-	case os.Getenv("OPENAI_MODEL_JIZUS"):
-		responseText += fmt.Sprintf(" - %s", emote.EMOTE_JIZUS)
-
-	default:
-		responseText += " - wise unknown robot"
+	signature := config.Config.Models[strings.ToLower(postReq.Args[0])].Signature
+	if signature == "" {
+		signature = "wise unknown robot"
 	}
+	responseText += fmt.Sprintf(" - %s", signature)
 
 	_, err = is.discordSession.ChannelMessageSend(postReq.ChannelID, responseText)
 	if err != nil {
@@ -92,7 +82,7 @@ func (is *igustusService) Post(postReq entities.PostRequest) {
 
 }
 
-func createCompletionWithFineTunedModel(prompt, model, openAiAPIKey string, tokens int) (gogpt.CompletionResponse, error) {
+func createCompletionWithFineTunedModel(prompt, model, openAiAPIKey string, tokens int, temperature, presencePenalty, frequencyPenalty float32) (gogpt.CompletionResponse, error) {
 	if openAiAPIKey == "" {
 		openAiAPIKey = os.Getenv("OPENAI_TOKEN")
 	}
@@ -102,11 +92,11 @@ func createCompletionWithFineTunedModel(prompt, model, openAiAPIKey string, toke
 
 	req := gogpt.CompletionRequest{
 		Prompt:           prompt,
-		Temperature:      0.9,
+		Temperature:      temperature,
 		Model:            &model,
 		MaxTokens:        tokens,
-		PresencePenalty:  -0.5,
-		FrequencyPenalty: 2,
+		PresencePenalty:  presencePenalty,
+		FrequencyPenalty: frequencyPenalty,
 	}
 
 	return c.CreateCompletionWithFineTunedModel(ctx, req)
@@ -264,7 +254,7 @@ func (is *igustusService) RandomlyReply(req entities.RandomReplyRequest) {
 }
 
 func replyToMessage(s *discordgo.Session, userID, channelID, prompt string) {
-	resp, err := createCompletionWithFineTunedModel(prompt, os.Getenv("OPENAI_MODEL_IGUSTUS"), os.Getenv("OPENAI_TOKEN"), 38)
+	resp, err := createCompletionWithFineTunedModel(prompt, os.Getenv("OPENAI_MODEL_IGUSTUS"), os.Getenv("OPENAI_TOKEN"), 38, 0.9, -0.5, 2)
 	if err != nil {
 		logger.Log.Error("error posting...", zap.Error(err))
 		return

@@ -9,6 +9,7 @@ require (
 	github.com/joho/godotenv v1.4.0
 	github.com/sashabaranov/go-gpt3 v0.0.0-20211001111712-2c60423fd27b
 	github.com/spf13/cobra v1.2.1
-	github.com/spf13/viper v1.9.0
+	github.com/spf13/viper v1.10.0
+	github.com/stretchr/testify v1.7.0
 	go.uber.org/zap v1.17.0
 )
