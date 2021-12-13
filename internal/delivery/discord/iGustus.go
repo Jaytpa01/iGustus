@@ -7,6 +7,7 @@ import (
 
 	"github.com/Jaytpa01/iGustus/internal/config"
 	"github.com/Jaytpa01/iGustus/internal/entities"
+	"github.com/Jaytpa01/iGustus/pkg/util"
 	"github.com/bwmarrin/discordgo"
 )
 
@@ -42,8 +43,15 @@ func (d *discordHandler) CommandsHandler(s *discordgo.Session, m *discordgo.Mess
 
 	command := strings.ToLower(args[0])
 
+	// if the command matches a model in the models config
 	if _, ok := config.Config.Models[command]; ok {
-		d.IgustusService.Post(config.Config.Models[command])
+		// if there are no arguments, we assume the user just wants to post
+		if !util.HasArgumentFlag(m.Content) {
+			d.IgustusService.Post(config.Config.Models[command])
+		}
+
+		// otherwise, we assume there is a command to configure the behviour of an AI model request
+
 	}
 
 	switch command {

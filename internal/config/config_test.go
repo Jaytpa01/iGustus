@@ -7,7 +7,7 @@ import (
 )
 
 func TestReadConfig(t *testing.T) {
-	err := readConfig()
+	err := ReadConfig()
 
 	assert.Nil(t, err)
 
@@ -16,4 +16,5 @@ func TestReadConfig(t *testing.T) {
 	}
 
 	assert.Equal(t, float32(0.7), Config.Models["post"].Temperature, Config)
+	assert.Equal(t, 38, Config.Models["post"].MaxTokens, Config)
 }
