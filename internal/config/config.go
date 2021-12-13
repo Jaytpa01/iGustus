@@ -55,6 +55,7 @@ func ConfigureModel(model string, args []string) (string, string, error) {
 	freqPenalty := parser.Float("f", "frequency", &argparse.Options{Required: false, Help: "Set the frequency penalty of the model. Accepts values between -2.0 and 2.0", Default: -3.0})
 	presPenalty := parser.Float("p", "presence", &argparse.Options{Required: false, Help: "Set the presence penalty of the model. Between -2.0 and 2.0.", Default: -3.0})
 	signature := parser.String("s", "signature", &argparse.Options{Required: false, Help: "Set the model's signature."})
+	topP := parser.Float("P", "top", &argparse.Options{Required: false, Help: "Set the top_p number. Between 0.0 and 1.0", Default: -3.0})
 	help := parser.Flag("h", "help", &argparse.Options{Required: false})
 	info := parser.Flag("i", "info", &argparse.Options{Required: false, Help: "Returns current configuration of the model."})
 
@@ -87,6 +88,15 @@ func ConfigureModel(model string, args []string) (string, string, error) {
 			*temperature = 1
 		}
 		modelsViper.Set(fmt.Sprintf("models.%s.temperature", model), *temperature)
+	}
+
+	if *topP != -3.0 {
+		if *topP < 0 {
+			*topP = 0
+		} else if *topP > 1 {
+			*topP = 1
+		}
+		modelsViper.Set(fmt.Sprintf("models.%s.top_p", model), *topP)
 	}
 
 	if *freqPenalty != -3.0 {
@@ -147,6 +157,10 @@ func configureDefault(req entities.PostRequest) entities.PostRequest {
 
 	if req.Signature == "" {
 		req.Signature = "wise unknown robot"
+	}
+
+	if req.TopP == 0 {
+		req.TopP = 1
 	}
 
 	return req

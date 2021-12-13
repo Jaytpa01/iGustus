@@ -16,10 +16,11 @@ type PostRequest struct {
 	Temperature      float32
 	PresencePenalty  float32
 	FrequencyPenalty float32
+	TopP             float32 `mapstructure:"top_p"`
 }
 
 func (p PostRequest) String() string {
-	return fmt.Sprintf("Max Token: %d\nTemperature: %.2f\nPresence Penalty: %.2f\nFrequency Penalty: %.2f\nSignature: %s\n", p.MaxTokens, p.Temperature, p.PresencePenalty, p.FrequencyPenalty, p.Signature)
+	return fmt.Sprintf("Max Token: %d\nTemperature: %.2f\nPresence Penalty: %.2f\nFrequency Penalty: %.2f\nTop_P: %.2f\nSignature: %s\n", p.MaxTokens, p.Temperature, p.PresencePenalty, p.FrequencyPenalty, p.TopP, p.Signature)
 }
 
 type ScrapeRequest struct {
@@ -38,4 +39,8 @@ type RandomReplyRequest struct {
 	UserIDToReply string
 	Timestamp     time.Time
 	MsgContent    string
+}
+
+type RollRequest struct {
+	Content string
 }
