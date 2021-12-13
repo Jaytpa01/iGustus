@@ -2,8 +2,11 @@ package cmd
 
 import (
 	"github.com/Jaytpa01/iGustus/internal/app"
+	"github.com/Jaytpa01/iGustus/internal/config"
+	"github.com/Jaytpa01/iGustus/pkg/logger"
 	"github.com/Jaytpa01/iGustus/pkg/util"
 	"github.com/spf13/cobra"
+	"go.uber.org/zap"
 )
 
 // serveCmd represents the serve command
@@ -14,7 +17,10 @@ var serveCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		// Verify the environment
 		VerifyServeEnvironment()
-
+		err := config.ReadConfig()
+		if err != nil {
+			logger.Log.Error("error reading config", zap.Error(err))
+		}
 		app.Run()
 	},
 }

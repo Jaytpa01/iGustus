@@ -1,7 +1,9 @@
 package discord
 
 import (
+	"fmt"
 	"os"
+	"sort"
 	"strings"
 	"time"
 
@@ -45,12 +47,56 @@ func (d *discordHandler) CommandsHandler(s *discordgo.Session, m *discordgo.Mess
 
 	// if the command matches a model in the models config
 	if _, ok := config.Config.Models[command]; ok {
-		// if there are no arguments, we assume the user just wants to post
-		if !util.HasArgumentFlag(m.Content) {
-			d.IgustusService.Post(config.Config.Models[command])
-		}
+		// if there are arguments, we assume the user wants to configure
+		if util.HasArgumentFlag(m.Content) /*|| strings.Contains(m.Content, "-h") || strings.Contains(m.Content, "--help")*/ {
+			modelInfo, helpMsg, err := config.ConfigureModel(command, args)
+			if err != nil {
+				s.ChannelMessageSend(m.ChannelID, fmt.Sprintf("Error editing model: %s", err.Error()))
+			}
 
-		// otherwise, we assume there is a command to configure the behviour of an AI model request
+			if helpMsg != "" {
+				s.ChannelMessageSendEmbed(m.ChannelID, &discordgo.MessageEmbed{
+					Fields: []*discordgo.MessageEmbedField{
+						{
+							Name:  "Bot Usage",
+							Value: helpMsg,
+						},
+					},
+				})
+
+				return
+			}
+
+			if modelInfo != "" {
+				s.ChannelMessageSendEmbed(m.ChannelID, &discordgo.MessageEmbed{
+					Fields: []*discordgo.MessageEmbedField{
+						{
+							Name:  fmt.Sprintf("%s config.", command),
+							Value: modelInfo,
+						},
+					},
+				})
+				return
+			}
+
+			s.ChannelMessageSendEmbed(m.ChannelID, &discordgo.MessageEmbed{
+				Fields: []*discordgo.MessageEmbedField{
+					{
+						Name:  fmt.Sprintf("%s successfully updated.", command),
+						Value: config.Config.Models[command].String(),
+					},
+				},
+			})
+			return
+		}
+		// otherwise, we assume the user just wants to post
+		tmp := config.Config.Models[command]
+		tmp.ChannelID = m.ChannelID
+		tmp.Args = args
+		config.Config.Models[command] = tmp
+
+		d.IgustusService.Post(config.Config.Models[command])
+		return
 
 	}
 
@@ -82,60 +128,22 @@ func (d *discordHandler) CommandsHandler(s *discordgo.Session, m *discordgo.Mess
 
 		d.IgustusService.Scrape(req)
 
-	case "post":
-		postReq := entities.PostRequest{
-			ChannelID:   m.ChannelID,
-			Args:        args,
-			OpenAIModel: os.Getenv("OPENAI_MODEL_IGUSTUS"),
-			MaxTokens:   38,
-		}
-		d.IgustusService.Post(postReq)
+	case "bots":
 
-	case "jiz":
-		jizReq := entities.PostRequest{
-			ChannelID:   m.ChannelID,
-			Args:        args,
-			OpenAIModel: os.Getenv("OPENAI_MODEL_JIZ"),
-			MaxTokens:   76,
+		bots := make([]string, 0, len(config.Config.Models))
+		for k := range config.Config.Models {
+			bots = append(bots, k)
 		}
-		d.IgustusService.Post(jizReq)
 
-	case "zep":
-		zepReq := entities.PostRequest{
-			ChannelID:   m.ChannelID,
-			Args:        args,
-			OpenAIModel: os.Getenv("OPENAI_MODEL_ZEP"),
-			MaxTokens:   90,
-		}
-		d.IgustusService.Post(zepReq)
+		sort.Strings(bots)
 
-	case "zep2":
-		zep2Req := entities.PostRequest{
-			ChannelID:   m.ChannelID,
-			Args:        args,
-			OpenAIModel: os.Getenv("OPENAI_MODEL_ZEP2"),
-			APIKey:      os.Getenv("OPENAI_TOKEN_ZEP"),
-			MaxTokens:   40,
+		botList := ""
+		for _, bot := range bots {
+			botList += bot + "\n"
 		}
-		d.IgustusService.Post(zep2Req)
 
-	case "jizus":
-		jizusReq := entities.PostRequest{
-			ChannelID:   m.ChannelID,
-			Args:        args,
-			OpenAIModel: os.Getenv("OPENAI_MODEL_JIZUS"),
-			MaxTokens:   38,
-		}
-		d.IgustusService.Post(jizusReq)
+		s.ChannelMessageSend(m.ChannelID, botList)
 
-	case "trump":
-		trumpReq := entities.PostRequest{
-			ChannelID:   m.ChannelID,
-			Args:        args,
-			OpenAIModel: os.Getenv("OPENAI_MODEL_TRUMP"),
-			MaxTokens:   42,
-		}
-		d.IgustusService.Post(trumpReq)
 	}
 
 }

@@ -8,6 +8,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/Jaytpa01/iGustus/internal/config"
 	"github.com/Jaytpa01/iGustus/internal/entities"
 	"github.com/Jaytpa01/iGustus/pkg/emote"
 	"github.com/Jaytpa01/iGustus/pkg/logger"
@@ -67,22 +68,11 @@ func (is *igustusService) Post(postReq entities.PostRequest) {
 		responseText = prompt + responseText
 	}
 
-	switch postReq.OpenAIModel {
-	case os.Getenv("OPENAI_MODEL_JIZ"):
-		responseText += fmt.Sprintf(" - %s", emote.EMOTE_JIZ)
-
-	case os.Getenv("OPENAI_MODEL_IGUSTUS"):
-		responseText += fmt.Sprintf(" - %s", emote.EMOTE_IGUSTUS)
-
-	case os.Getenv("OPENAI_MODEL_ZEP"):
-		responseText += fmt.Sprintf(" - %s", emote.EMOTE_FRIGACHAD)
-
-	case os.Getenv("OPENAI_MODEL_JIZUS"):
-		responseText += fmt.Sprintf(" - %s", emote.EMOTE_JIZUS)
-
-	default:
-		responseText += " - wise unknown robot"
+	signature := config.Config.Models[strings.ToLower(postReq.Args[0])].Signature
+	if signature == "" {
+		signature = "wise unknown robot"
 	}
+	responseText += fmt.Sprintf(" - %s", signature)
 
 	_, err = is.discordSession.ChannelMessageSend(postReq.ChannelID, responseText)
 	if err != nil {
