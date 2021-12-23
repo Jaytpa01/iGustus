@@ -1,13 +1,16 @@
 package discord
 
-import "github.com/Jaytpa01/iGustus/internal/entities"
+import (
+	"github.com/Jaytpa01/iGustus/internal/entities"
+	"github.com/Jaytpa01/iGustus/internal/entities/mud"
+)
 
 type discordHandler struct {
 	IgustusService entities.IGustusService
-	MudService     entities.MudService
+	MudService     mud.MudService
 }
 
-func newDiscordDeliveryHandler(service entities.IGustusService, mudService entities.MudService) entities.DiscordHandler {
+func newDiscordDeliveryHandler(service entities.IGustusService, mudService mud.MudService) entities.DiscordHandler {
 	return &discordHandler{
 		IgustusService: service,
 		MudService:     mudService,

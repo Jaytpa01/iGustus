@@ -9,24 +9,25 @@ import (
 	"time"
 
 	"github.com/Jaytpa01/iGustus/internal/entities"
+	"github.com/Jaytpa01/iGustus/internal/entities/mud"
 	"github.com/Jaytpa01/iGustus/pkg/logger"
 	"go.uber.org/zap"
 )
 
 type mudService struct{}
 
-func NewMudService() entities.MudService {
+func NewMudService() mud.MudService {
 	return &mudService{}
 }
 
-func (m *mudService) Roll(req entities.RollRequest) ([]entities.DiceRollResult, error) {
+func (m *mudService) Roll(req entities.RollRequest) ([]mud.DiceRollResult, error) {
 	r, err := regexp.Compile(`\d+d\d+`)
 	if err != nil {
 		logger.Log.Error("error compiling regex", zap.Error(err))
 		return nil, err
 	}
 
-	results := []entities.DiceRollResult{}
+	results := []mud.DiceRollResult{}
 
 	rolls := r.FindAllString(req.Content, -1)
 	if len(rolls) == 0 {
@@ -50,7 +51,7 @@ func (m *mudService) Roll(req entities.RollRequest) ([]entities.DiceRollResult, 
 	return results, nil
 }
 
-func rollDice(numOfDice, numOfFaces int) entities.DiceRollResult {
+func rollDice(numOfDice, numOfFaces int) mud.DiceRollResult {
 	s := rand.NewSource(time.Now().UnixNano())
 	r := rand.New(s)
 
@@ -64,7 +65,7 @@ func rollDice(numOfDice, numOfFaces int) entities.DiceRollResult {
 		total += num
 	}
 
-	return entities.DiceRollResult{
+	return mud.DiceRollResult{
 		Results: results,
 		Total:   total,
 	}

@@ -10,11 +10,12 @@ import (
 
 	"github.com/Jaytpa01/iGustus/internal/config"
 	"github.com/Jaytpa01/iGustus/internal/entities"
+	"github.com/Jaytpa01/iGustus/internal/entities/mud"
 	"github.com/Jaytpa01/iGustus/pkg/util"
 	"github.com/bwmarrin/discordgo"
 )
 
-func NewDiscordHandler(session *discordgo.Session, service entities.IGustusService, mudService entities.MudService) {
+func NewDiscordHandler(session *discordgo.Session, service entities.IGustusService, mudService mud.MudService) {
 	handler := newDiscordDeliveryHandler(service, mudService)
 
 	session.AddHandler(handler.CommandsHandler)
